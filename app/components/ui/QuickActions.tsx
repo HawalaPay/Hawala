@@ -1,5 +1,5 @@
 import React from "react";
-import { Send, Wallet, CreditCard, Coins, Image } from "lucide-react";
+import { Send, Wallet, CreditCard, Coins, Image, Clock, HelpCircle } from "lucide-react";
 
 const QuickAction = ({
   icon: Icon,
@@ -36,6 +36,14 @@ const QuickActions = ({
     window.location.href = "/buy-crypto";
   };
 
+  const handleAutomaticPaymentClick = () => {
+    window.location.href = "/auto-payments";
+  };
+
+  const handleSupportClick = () => {
+    window.location.href = "/support";
+  };
+
   return (
     <div>
       <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
@@ -45,6 +53,17 @@ const QuickActions = ({
         <QuickAction icon={CreditCard} label="Cards" onClick={onBuyCardClick} />
         <QuickAction icon={Image} label="NFT" onClick={handleNFTClick} />
         <QuickAction icon={Coins} label="Crypto" onClick={handleBuyCryptoClick} />
+        {/* New buttons */}
+        <QuickAction 
+          icon={Clock} 
+          label="Automatic Payment" 
+          onClick={handleAutomaticPaymentClick} 
+        />
+        <QuickAction 
+          icon={HelpCircle} 
+          label="Support" 
+          onClick={handleSupportClick} 
+        />
       </div>
     </div>
   );
