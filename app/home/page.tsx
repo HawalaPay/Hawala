@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import StatsGrid from "@/components/ui/StatsGrid";
+import StatsGrid, { StatData } from "@/components/ui/StatsGrid";
 import QuickActions from "@/components/ui/QuickActions";
 import RecentContacts from "@/components/ui/RecentContacts";
 import RecentActivity from "@/components/ui/RecentActivity";
@@ -10,12 +10,9 @@ import SendMoney from "@/components/ui/send-money";
 import RequestMoney from "@/components/ui/request-money";
 import BuyCard from "@/components/ui/buy-card";
 
-// Define the type for the stats prop
-type StatsItem = any; // Replace 'any' with a more specific type if available
-
 const PaymentApp: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<StatsItem[]>([]);
+  const [stats, setStats] = useState<StatData[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [showSendMoney, setShowSendMoney] = useState(false);
@@ -27,9 +24,20 @@ const PaymentApp: React.FC = () => {
     try {
       const response = await fetch("/api/stats");
       const data = await response.json();
-      setStats(data);
+      
+      // Transform the API data to match StatData interface
+      const formattedStats: StatData[] = data.map((item: any) => ({
+        label: item.label || "Balance",
+        amount: item.amount || "0.00",
+        symbol: item.symbol || "USD",
+        trend: item.trend || 0,
+      }));
+      
+      setStats(formattedStats);
     } catch (error) {
       console.error("Error fetching stats:", error);
+      // Don't set default values, let the component handle empty state
+      setStats([]);
     }
   };
 
@@ -91,7 +99,7 @@ const PaymentApp: React.FC = () => {
           </div>
 
           {/* Stats Grid */}
-          {stats.length > 0 && <StatsGrid stats={stats} />}
+          <StatsGrid stats={stats} />
 
           {/* Quick Actions */}
           <div className="bg-white shadow-md rounded-lg p-4">

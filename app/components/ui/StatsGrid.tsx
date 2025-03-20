@@ -43,7 +43,6 @@ export interface StatData {
   error?: string;
 }
 
-// Add this interface to accept the stats prop
 export interface StatsGridProps {
   stats?: StatData[];
 }
@@ -87,30 +86,16 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-// Update the component to accept the stats prop
 const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [stats, setStats] = useState<StatData[]>(
-    externalStats || 
-    TOKENS.map((token) => ({
-      label: token.label,
-      amount: token.defaultValue,
-      symbol: token.symbol,
-      trend: 0,
-    }))
-  );
+  const [internalStats, setInternalStats] = useState<StatData[]>([]);
   const [account, setAccount] = useState<string | null>(null);
-
-  // If external stats are provided, use them instead of fetching
-  useEffect(() => {
-    if (externalStats) {
-      setStats(externalStats);
-    }
-  }, [externalStats]);
+  
+  // Determine if we're using external stats
+  const usingExternalStats = Array.isArray(externalStats) && externalStats.length > 0;
 
   const handleAccountsChanged = (accounts: unknown) => {
-    // Type narrowing for `accounts`
     if (Array.isArray(accounts) && accounts.length > 0) {
       const [firstAccount] = accounts as string[];
       setAccount(firstAccount);
@@ -119,31 +104,19 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
     } else {
       setAccount(null);
       setIsConnected(false);
-      resetStats();
     }
-  };
-
-  const resetStats = () => {
-    setStats(
-      TOKENS.map((token) => ({
-        label: token.label,
-        amount: token.defaultValue,
-        symbol: token.symbol,
-        trend: 0,
-      }))
-    );
   };
 
   useEffect(() => {
     // Only set up listeners if we're not using external stats
-    if (!externalStats && window.ethereum) {
+    if (!usingExternalStats && window.ethereum) {
       window.ethereum.on("accountsChanged", handleAccountsChanged);
 
       return () => {
         window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
       };
     }
-  }, [externalStats]);
+  }, [usingExternalStats]);
 
   const fetchBalances = async (userAccount: string) => {
     setIsLoading(true);
@@ -176,10 +149,9 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
           }
         })
       );
-      setStats(balances);
+      setInternalStats(balances);
     } catch (error) {
       console.error("Failed to fetch balances:", error);
-      resetStats();
     } finally {
       setIsLoading(false);
     }
@@ -209,17 +181,17 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
   };
 
   // If external stats are provided, use them directly
-  if (externalStats) {
+  if (usingExternalStats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {stats.map((stat, index) => (
+        {externalStats.map((stat, index) => (
           <StatsCard key={index} {...stat} />
         ))}
       </div>
     );
   }
 
-  // Original component logic for wallet connection
+  // No external stats provided, show empty state with connect wallet option
   if (!isConnected) {
     return (
       <div className="text-center">
@@ -245,7 +217,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {stats.map((stat, index) => (
+      {internalStats.map((stat, index) => (
         <StatsCard key={index} {...stat} />
       ))}
     </div>
