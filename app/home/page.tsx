@@ -10,9 +10,12 @@ import SendMoney from "@/components/ui/send-money";
 import RequestMoney from "@/components/ui/request-money";
 import BuyCard from "@/components/ui/buy-card";
 
+// Define the type for the stats prop
+type StatsItem = any; // Replace 'any' with a more specific type if available
+
 const PaymentApp: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<any[]>([]);
+  const [stats, setStats] = useState<StatsItem[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [showSendMoney, setShowSendMoney] = useState(false);
@@ -88,7 +91,7 @@ const PaymentApp: React.FC = () => {
           </div>
 
           {/* Stats Grid */}
-          <StatsGrid stats={stats} />
+          {stats.length > 0 && <StatsGrid stats={stats} />}
 
           {/* Quick Actions */}
           <div className="bg-white shadow-md rounded-lg p-4">

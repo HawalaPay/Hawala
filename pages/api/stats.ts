@@ -40,7 +40,7 @@ export default async function handler(
     
     // Contract addresses
     const contractAddresses = [
-      '0xfD4eCAfDFd435cd23E90Da010E3E8b4e791A3D21',
+      '0x54dbf636810118e623ae9770ac3b0ddbdcffe1e7',
       '0x455e53cbb86018ac2b8092fdcd39d8444affc3f6'
     ];
 

@@ -10,13 +10,13 @@ interface Ethereum {
 
 declare global {
   interface Window {
-    kethereum?: Ethereum;
+    lethereum?: Ethereum;
   }
 }
 
 const TOKENS = [
   {
-    address: "0xfD4eCAfDFd435cd23E90Da010E3E8b4e791A3D21",
+    address: "0x54dbf636810118e623ae9770ac3b0ddbdcffe1e7",
     label: "RUPA Balance",
     symbol: "RUPA",
     defaultValue: "0.00",
@@ -35,12 +35,17 @@ const ERC20_ABI = [
   "function symbol() view returns (string)",
 ];
 
-interface StatData {
+export interface StatData {
   label: string;
   amount: string;
   symbol: string;
   trend?: number;
   error?: string;
+}
+
+// Add this interface to accept the stats prop
+export interface StatsGridProps {
+  stats?: StatData[];
 }
 
 const StatsCard = ({ label, amount, symbol, trend = 0, error }: StatData) => (
@@ -82,10 +87,12 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-export default function StatsGrid() {
+// Update the component to accept the stats prop
+const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [stats, setStats] = useState<StatData[]>(
+    externalStats || 
     TOKENS.map((token) => ({
       label: token.label,
       amount: token.defaultValue,
@@ -94,6 +101,13 @@ export default function StatsGrid() {
     }))
   );
   const [account, setAccount] = useState<string | null>(null);
+
+  // If external stats are provided, use them instead of fetching
+  useEffect(() => {
+    if (externalStats) {
+      setStats(externalStats);
+    }
+  }, [externalStats]);
 
   const handleAccountsChanged = (accounts: unknown) => {
     // Type narrowing for `accounts`
@@ -121,14 +135,15 @@ export default function StatsGrid() {
   };
 
   useEffect(() => {
-    if (window.ethereum) {
+    // Only set up listeners if we're not using external stats
+    if (!externalStats && window.ethereum) {
       window.ethereum.on("accountsChanged", handleAccountsChanged);
 
       return () => {
         window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
       };
     }
-  }, []);
+  }, [externalStats]);
 
   const fetchBalances = async (userAccount: string) => {
     setIsLoading(true);
@@ -193,6 +208,18 @@ export default function StatsGrid() {
     }
   };
 
+  // If external stats are provided, use them directly
+  if (externalStats) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {stats.map((stat, index) => (
+          <StatsCard key={index} {...stat} />
+        ))}
+      </div>
+    );
+  }
+
+  // Original component logic for wallet connection
   if (!isConnected) {
     return (
       <div className="text-center">
@@ -223,4 +250,6 @@ export default function StatsGrid() {
       ))}
     </div>
   );
-}
+};
+
+export default StatsGrid;
