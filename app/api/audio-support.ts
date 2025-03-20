@@ -80,7 +80,7 @@ async function transcribeAudioWithGroq(audioData: Blob): Promise<{
           }
         ],
         temperature: 0.2,
-        max_tokens: 50
+        max_tokens: 500
       })
     });
 
@@ -115,7 +115,7 @@ async function transcribeAudioWithGroq(audioData: Blob): Promise<{
             content: transcription
           }
         ],
-        temperature: 0.2,
+        temperature: 0.8,
         max_tokens: 1000
       })
     });
