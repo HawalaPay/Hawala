@@ -45,6 +45,7 @@ export interface StatData {
 
 export interface StatsGridProps {
   stats?: StatData[];
+  autoConnect?: boolean;
 }
 
 const StatsCard = ({ label, amount, symbol, trend = 0, error }: StatData) => (
@@ -86,37 +87,93 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
+const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats, autoConnect = true }) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [internalStats, setInternalStats] = useState<StatData[]>([]);
   const [account, setAccount] = useState<string | null>(null);
+  const [providerError, setProviderError] = useState<string | null>(null);
   
   // Determine if we're using external stats
   const usingExternalStats = Array.isArray(externalStats) && externalStats.length > 0;
 
-  const handleAccountsChanged = (accounts: unknown) => {
+  const handleAccountsChanged = async (accounts: unknown) => {
     if (Array.isArray(accounts) && accounts.length > 0) {
       const [firstAccount] = accounts as string[];
       setAccount(firstAccount);
       setIsConnected(true);
-      fetchBalances(firstAccount);
+      await fetchBalances(firstAccount);
     } else {
       setAccount(null);
       setIsConnected(false);
+      setInternalStats(TOKENS.map(token => ({
+        label: token.label,
+        amount: token.defaultValue,
+        symbol: token.symbol,
+      })));
+    }
+  };
+
+  const checkAndConnectWallet = async () => {
+    setIsLoading(true);
+    setProviderError(null);
+    
+    try {
+      if (!window.ethereum) {
+        setProviderError("No Ethereum provider detected. Please install MetaMask.");
+        setIsLoading(false);
+        return;
+      }
+
+      // First check if already connected
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      
+      if (accounts && Array.isArray(accounts) && accounts.length > 0) {
+        // Already connected
+        await handleAccountsChanged(accounts);
+      } else if (autoConnect) {
+        // Not connected but autoConnect is true, so request connection
+        const requestedAccounts = await window.ethereum.request({
+          method: 'eth_requestAccounts',
+        });
+        await handleAccountsChanged(requestedAccounts);
+      } else {
+        // Not connected and autoConnect is false
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("Wallet connection error:", error);
+      if (error instanceof Error) {
+        setProviderError(`Connection error: ${error.message}`);
+      } else {
+        setProviderError("Failed to connect to wallet");
+      }
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Only set up listeners if we're not using external stats
-    if (!usingExternalStats && window.ethereum) {
-      window.ethereum.on("accountsChanged", handleAccountsChanged);
+    // Skip if using external stats
+    if (!usingExternalStats) {
+      checkAndConnectWallet();
 
-      return () => {
-        window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
-      };
+      // Set up event listeners
+      if (window.ethereum) {
+        window.ethereum.on("accountsChanged", handleAccountsChanged);
+        window.ethereum.on("chainChanged", () => {
+          // Refresh the page on chain change
+          window.location.reload();
+        });
+
+        return () => {
+          window.ethereum?.removeListener("accountsChanged", handleAccountsChanged);
+          window.ethereum?.removeListener("chainChanged", () => {});
+        };
+      }
+    } else {
+      setIsLoading(false);
     }
-  }, [usingExternalStats]);
+  }, [usingExternalStats, autoConnect]);
 
   const fetchBalances = async (userAccount: string) => {
     setIsLoading(true);
@@ -152,32 +209,20 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
       setInternalStats(balances);
     } catch (error) {
       console.error("Failed to fetch balances:", error);
+      setInternalStats(TOKENS.map(token => ({
+        label: token.label,
+        amount: token.defaultValue,
+        symbol: token.symbol,
+        error: "Failed to fetch balance",
+      })));
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Manual connect function for when autoConnect is false
   const connectWallet = async () => {
-    if (!window.ethereum) {
-      alert("Please install MetaMask!");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      if (accounts && Array.isArray(accounts)) {
-        handleAccountsChanged(accounts);
-      }
-    } catch (error) {
-      console.error("Failed to connect:", error);
-      setIsConnected(false);
-    } finally {
-      setIsLoading(false);
-    }
+    await checkAndConnectWallet();
   };
 
   // If external stats are provided, use them directly
@@ -191,8 +236,24 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
     );
   }
 
-  // No external stats provided, show empty state with connect wallet option
-  if (!isConnected) {
+  // Show provider error if exists
+  if (providerError) {
+    return (
+      <div className="text-center p-4 border border-red-200 bg-red-50 rounded-lg">
+        <p className="text-red-600 mb-4">{providerError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Show connect button if not connected and autoConnect is false
+  if (!isConnected && !autoConnect) {
     return (
       <div className="text-center">
         <button
@@ -206,6 +267,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
     );
   }
 
+  // Show loading state while connecting or fetching balances
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -215,6 +277,7 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats }) => {
     );
   }
 
+  // Show balances
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {internalStats.map((stat, index) => (

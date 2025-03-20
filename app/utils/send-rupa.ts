@@ -8,7 +8,7 @@ const ERC20_ABI = [
   "function allowance(address owner, address spender) external view returns (uint256)",
 ];
 
-const RUPA_CONTRACT_ADDRESS = "0xfD4eCAfDFd435cd23E90Da010E3E8b4e791A3D21";
+const RUPA_CONTRACT_ADDRESS = "0x54dbf636810118e623ae9770ac3b0ddbdcffe1e7";
 
 export async function sendTokens(
   recipientAddress: string,

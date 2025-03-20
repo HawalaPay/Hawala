@@ -31,24 +31,24 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
   const contacts: Contact[] = [
     { 
       id: 1, 
-      name: "Prakash Magesh", 
-      image: "/api/placeholder/40/40", 
+      name: "Durva Dongre", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-5.png?raw=true", 
       lastAmount: "2,500", 
-      address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e" 
+      address: "0x6da09B40135aCa55a967CEA5BD08D4FE6D2bD608" 
     },
     { 
       id: 2, 
-      name: "Irfan Shaikh", 
-      image: "/api/placeholder/40/40", 
+      name: "Aviraj Patil", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-1.png?raw=true", 
       lastAmount: "1,800", 
-      address: "0x123d35Cc6634C0532925a3b844Bc454e4438f123" 
+      address: "0x2Cd79fa52973Ac5651314d9868bcdB779042FE87" 
     },
     { 
       id: 3, 
-      name: "Soham Patil", 
-      image: "/api/placeholder/40/40", 
+      name: "Dhanyakumar Mane", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-2.png?raw=true", 
       lastAmount: "3,200", 
-      address: "0x456d35Cc6634C0532925a3b844Bc454e4438f456" 
+      address: "0x951FB9620A09E1284Ec6Bf08296C977FDf0415B5" 
     },
   ];
 
