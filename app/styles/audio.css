@@ -1,0 +1,346 @@
+/* audio-support.css - Minimal Black and White Theme */
+
+/* Base Styles */
+:root {
+  --primary-color: #333333;
+  --secondary-color: #666666;
+  --accent-color: #888888;
+  --light-bg: #ffffff;
+  --medium-bg: #f5f5f5;
+  --dark-border: #333333;
+  --text-color: #000000;
+  --error-color: #999999;
+  --success-color: #555555;
+  --info-color: #777777;
+}
+
+/* General Layout */
+.support-container {
+  min-height: 100vh;
+  background-color: var(--light-bg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+}
+
+.support-title {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: var(--text-color);
+  letter-spacing: 0.5px;
+}
+
+/* Form Container */
+.form-container {
+  width: 100%;
+  max-width: 550px;
+  background-color: var(--light-bg);
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+/* Error Message */
+.error-message {
+  background-color: var(--medium-bg);
+  border-left: 3px solid var(--error-color);
+  padding: 0.875rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Recording Section */
+.recording-section {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.instruction-text {
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  font-size: 0.95rem;
+  font-weight: 300;
+}
+
+.recorder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.recorder-circle {
+  width: 10rem;
+  height: 10rem;
+  border-radius: 50%;
+  background-color: var(--medium-bg);
+  border: 2px solid var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.recorder-circle.recording {
+  background-color: var(--medium-bg);
+}
+
+.recorder-circle.recorded {
+  border-color: var(--success-color);
+}
+
+.recording-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timer-display {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
+  color: var(--text-color);
+}
+
+.recorded-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.recorded-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--success-color);
+  margin-bottom: 0.5rem;
+}
+
+.duration-text {
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+}
+
+.mic-icon {
+  color: var(--primary-color);
+}
+
+/* Control Buttons */
+.control-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.start-button, .stop-button, .reset-button, .send-button {
+  padding: 0.7rem 1.4rem;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+}
+
+.start-button {
+  background-color: var(--light-bg);
+  color: var(--text-color);
+  border: 1px solid var(--primary-color);
+}
+
+.start-button:hover {
+  background-color: var(--medium-bg);
+}
+
+.stop-button {
+  background-color: var(--light-bg);
+  color: var(--text-color);
+  border: 1px solid var(--error-color);
+}
+
+.stop-button:hover {
+  background-color: var(--medium-bg);
+}
+
+.reset-button {
+  background-color: var(--light-bg);
+  color: var(--text-color);
+  border: 1px solid var(--primary-color);
+}
+
+.reset-button:hover {
+  background-color: var(--medium-bg);
+}
+
+.send-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: 1px solid var(--primary-color);
+}
+
+.send-button:hover {
+  background-color: var(--secondary-color);
+}
+
+.send-button.sending {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Playback Section */
+.playback-section {
+  margin-bottom: 2rem;
+  background-color: var(--medium-bg);
+  border-radius: 6px;
+  padding: 1.25rem;
+  border: 1px solid var(--secondary-color);
+}
+
+.playback-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.audio-player-container {
+  background-color: var(--light-bg);
+  padding: 0.875rem;
+  border-radius: 6px;
+  border: 1px solid var(--secondary-color);
+}
+
+.audio-player {
+  width: 100%;
+  height: 40px;
+}
+
+/* Footer Section */
+.footer-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--secondary-color);
+  width: 100%;
+}
+
+.terms-text {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.back-link {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--primary-color);
+  background-color: var(--light-bg);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.back-link:hover {
+  background-color: var(--medium-bg);
+}
+
+/* Response Container */
+.response-container {
+  width: 100%;
+  max-width: 700px;
+  background-color: var(--light-bg);
+  border: 1px solid var(--dark-border);
+  border-radius: 8px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.response-header {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: var(--text-color);
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  font-weight: 500;
+}
+
+.response-header::after {
+  content: '';
+  position: absolute;
+  width: 40%;
+  height: 1px;
+  background: var(--primary-color);
+  left: 30%;
+  bottom: -10px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.ticket-section, .understanding-section, .solution-section, .next-steps-section {
+  margin-bottom: 2rem;
+}
+
+.ticket-info, .understanding-content, .description-content {
+  background-color: var(--medium-bg);
+  border-radius: 6px;
+  padding: 1.25rem;
+  border: 1px solid var(--secondary-color);
+}
+
+.understanding-content p, .ticket-info p {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+/* Voice Responsive Ring */
+.voice-responsive-ring {
+  position: absolute;
+  width: 104%;
+  height: 104%;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* Active state with minimal styling */
+.voice-responsive-ring.active {
+  border-color: var(--info-color);
+}
+
+/* Inactive state */
+.voice-responsive-ring.inactive {
+  border-radius: 50%;
+}
