@@ -41,7 +41,7 @@ const QuickActions = ({
   };
   
   const handleAutomaticPaymentClick = () => {
-    onAutomaticPaymentClick ? onAutomaticPaymentClick() : window.location.href = "/automatic-payment";
+    onAutomaticPaymentClick ? onAutomaticPaymentClick() : window.location.href = "/auto-pay";
   };
   
   const handleSupportClick = () => {
