@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { BrowserProvider, Contract, formatUnits } from "ethers";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw } from "lucide-react";
 
 interface Ethereum {
   request: (args: { method: string; params?: any[] }) => Promise<any>;
@@ -10,7 +10,7 @@ interface Ethereum {
 
 declare global {
   interface Window {
-    lethereum?: Ethereum;
+    iethereum?: Ethereum;
   }
 }
 
@@ -46,6 +46,7 @@ export interface StatData {
 export interface StatsGridProps {
   stats?: StatData[];
   autoConnect?: boolean;
+  refreshInterval?: number; // Refresh interval in milliseconds
 }
 
 const StatsCard = ({ label, amount, symbol, trend = 0, error }: StatData) => (
@@ -87,12 +88,18 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats, autoConnect = true }) => {
+const StatsGrid: React.FC<StatsGridProps> = ({ 
+  stats: externalStats, 
+  autoConnect = true,
+  refreshInterval = 30000 // Default to 30 seconds
+}) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [internalStats, setInternalStats] = useState<StatData[]>([]);
   const [account, setAccount] = useState<string | null>(null);
   const [providerError, setProviderError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   
   // Determine if we're using external stats
   const usingExternalStats = Array.isArray(externalStats) && externalStats.length > 0;
@@ -113,6 +120,64 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats, autoConnect
       })));
     }
   };
+
+  const fetchBalances = useCallback(async (userAccount: string) => {
+    setIsRefreshing(true);
+    try {
+      if (!window.ethereum) throw new Error("No provider available");
+
+      const provider = new BrowserProvider(window.ethereum);
+      const balances = await Promise.all(
+        TOKENS.map(async (token) => {
+          try {
+            const contract = new Contract(token.address, ERC20_ABI, provider);
+            const [balance, decimals] = await Promise.all([
+              contract.balanceOf(userAccount),
+              contract.decimals(),
+            ]);
+            const formattedBalance = parseFloat(formatUnits(balance, decimals));
+            
+            // Calculate trend if we have previous data
+            let trend = 0;
+            const prevStat = internalStats.find(stat => stat.label === token.label);
+            if (prevStat && !prevStat.error) {
+              const prevAmount = parseFloat(prevStat.amount);
+              if (prevAmount > 0) {
+                trend = ((formattedBalance - prevAmount) / prevAmount) * 100;
+              }
+            }
+            
+            return {
+              label: token.label,
+              amount: formattedBalance.toFixed(2),
+              symbol: token.symbol,
+              trend: trend,
+            };
+          } catch (error) {
+            return {
+              label: token.label,
+              amount: token.defaultValue,
+              symbol: token.symbol,
+              error: "Failed to fetch balance",
+            };
+          }
+        })
+      );
+      setInternalStats(balances);
+      setLastRefreshed(new Date());
+    } catch (error) {
+      console.error("Failed to fetch balances:", error);
+      setInternalStats(TOKENS.map(token => ({
+        label: token.label,
+        amount: token.defaultValue,
+        symbol: token.symbol,
+        error: "Failed to fetch balance",
+      })));
+    } finally {
+      setIsRefreshing(false);
+      setIsLoading(false);
+    }
+  }, [internalStats]);
 
   const checkAndConnectWallet = async () => {
     setIsLoading(true);
@@ -152,6 +217,13 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats, autoConnect
     }
   };
 
+  // Manual refresh function
+  const refreshBalances = async () => {
+    if (account && isConnected && !isRefreshing) {
+      await fetchBalances(account);
+    }
+  };
+
   useEffect(() => {
     // Skip if using external stats
     if (!usingExternalStats) {
@@ -175,50 +247,16 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats, autoConnect
     }
   }, [usingExternalStats, autoConnect]);
 
-  const fetchBalances = async (userAccount: string) => {
-    setIsLoading(true);
-    try {
-      if (!window.ethereum) throw new Error("No provider available");
+  // Set up auto-refresh interval
+  useEffect(() => {
+    if (!usingExternalStats && account && isConnected) {
+      const intervalId = setInterval(() => {
+        refreshBalances();
+      }, refreshInterval);
 
-      const provider = new BrowserProvider(window.ethereum);
-      const balances = await Promise.all(
-        TOKENS.map(async (token) => {
-          try {
-            const contract = new Contract(token.address, ERC20_ABI, provider);
-            const [balance, decimals] = await Promise.all([
-              contract.balanceOf(userAccount),
-              contract.decimals(),
-            ]);
-            const formattedBalance = parseFloat(formatUnits(balance, decimals));
-            return {
-              label: token.label,
-              amount: formattedBalance.toFixed(2),
-              symbol: token.symbol,
-              trend: 0,
-            };
-          } catch (error) {
-            return {
-              label: token.label,
-              amount: token.defaultValue,
-              symbol: token.symbol,
-              error: "Failed to fetch balance",
-            };
-          }
-        })
-      );
-      setInternalStats(balances);
-    } catch (error) {
-      console.error("Failed to fetch balances:", error);
-      setInternalStats(TOKENS.map(token => ({
-        label: token.label,
-        amount: token.defaultValue,
-        symbol: token.symbol,
-        error: "Failed to fetch balance",
-      })));
-    } finally {
-      setIsLoading(false);
+      return () => clearInterval(intervalId);
     }
-  };
+  }, [account, isConnected, refreshInterval, usingExternalStats, fetchBalances]);
 
   // Manual connect function for when autoConnect is false
   const connectWallet = async () => {
@@ -277,12 +315,35 @@ const StatsGrid: React.FC<StatsGridProps> = ({ stats: externalStats, autoConnect
     );
   }
 
-  // Show balances
+  // Format the last refreshed time
+  const formattedLastRefreshed = lastRefreshed 
+    ? `Last updated: ${lastRefreshed.toLocaleTimeString()}`
+    : '';
+
+  // Show balances with refresh controls
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {internalStats.map((stat, index) => (
-        <StatsCard key={index} {...stat} />
-      ))}
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-sm text-gray-500">
+          {formattedLastRefreshed}
+        </div>
+        <button
+          onClick={refreshBalances}
+          disabled={isRefreshing}
+          className={`flex items-center text-sm px-3 py-1 rounded ${
+            isRefreshing ? "bg-gray-100 text-gray-400" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          } transition-colors`}
+        >
+          <RefreshCw className={`w-4 h-4 mr-1 ${isRefreshing ? "animate-spin" : ""}`} />
+          {isRefreshing ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {internalStats.map((stat, index) => (
+          <StatsCard key={index} {...stat} />
+        ))}
+      </div>
     </div>
   );
 };

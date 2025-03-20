@@ -80,7 +80,7 @@ async function transcribeAudioWithGroq(audioData: Blob): Promise<{
           }
         ],
         temperature: 0.2,
-        max_tokens: 50
+        max_tokens: 500
       })
     });
 
@@ -115,7 +115,7 @@ async function transcribeAudioWithGroq(audioData: Blob): Promise<{
             content: transcription
           }
         ],
-        temperature: 0.2,
+        temperature: 0.8,
         max_tokens: 1000
       })
     });
@@ -299,6 +299,7 @@ async function saveToGoogleSheets(request: SupportRequest, analysis: GroqAnalysi
     // Fix: Use direct URL with all parameters
     const baseUrl = 'https://script.google.com/macros/s/AKfycbwEtIaGxm-3Ff-iZM4_Fuys8x4BKYf9kadN1B1oadMenS9ATzdHCOcgqpuwGhZa4OQJQA/exec';
     
+
     // URL encode all parameters
     const params = new URLSearchParams();
     params.append('action', 'put');
@@ -336,7 +337,7 @@ async function saveToGoogleSheets(request: SupportRequest, analysis: GroqAnalysi
 
 async function makePhoneCall(request: SupportRequest, analysis: GroqAnalysisResponse): Promise<boolean> {
   try {
-    const blandApiKey = process.env.BLAND_AI_API_KEY;
+    const blandApiKey = process.env.BLAND_AUDIO_AI_API_KEY;
     
     if (!blandApiKey) {
       throw new Error('Bland.ai API key is not defined');
