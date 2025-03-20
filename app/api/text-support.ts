@@ -100,7 +100,7 @@ export interface SupportRequest {
       const customerId = ticketId;
       
       // Fix: Use direct URL with all parameters
-      const baseUrl = 'https://script.google.com/macros/s/AKfycbw-CzEZI_vkZnCb84QyoHJEW5_-rKYBwlMIloCBcHDcpjcq2SvycreyJcYGrzjJixhR/exec';
+      const baseUrl = 'https://script.google.com/macros/s/AKfycbwEtIaGxm-3Ff-iZM4_Fuys8x4BKYf9kadN1B1oadMenS9ATzdHCOcgqpuwGhZa4OQJQA/exec';
       
       // URL encode all parameters
       const params = new URLSearchParams();

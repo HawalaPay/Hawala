@@ -296,8 +296,8 @@ async function saveToGoogleSheets(request: SupportRequest, analysis: GroqAnalysi
   try {
     const customerId = ticketId;
 
-    // Fix: Use direct URL with all parameters
-    const baseUrl = 'https://script.google.com/macros/s/AKfycbw-CzEZI_vkZnCb84QyoHJEW5_-rKYBwlMIloCBcHDcpjcq2SvycreyJcYGrzjJixhR/exec';
+    // Fix: Use dire URL with all parameters
+    const baseUrl = 'https://script.google.com/macros/s/AKfycbwEtIaGxm-3Ff-iZM4_Fuys8x4BKYf9kadN1B1oadMenS9ATzdHCOcgqpuwGhZa4OQJQA/exec';
     
     // URL encode all parameters
     const params = new URLSearchParams();
@@ -336,7 +336,7 @@ async function saveToGoogleSheets(request: SupportRequest, analysis: GroqAnalysi
 
 async function makePhoneCall(request: SupportRequest, analysis: GroqAnalysisResponse): Promise<boolean> {
   try {
-    const blandApiKey = process.env.BLAND_AI_API_KEY;
+    const blandApiKey = process.env.BLAND_AUDIO_AI_API_KEY;
     
     if (!blandApiKey) {
       throw new Error('Bland.ai API key is not defined');
