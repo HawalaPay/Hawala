@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, ScanLine } from "lucide-react";
+import { useRouter } from "next/navigation";
 import StatsGrid, { StatData } from "@/components/ui/StatsGrid";
 import QuickActions from "@/components/ui/QuickActions";
 import RecentContacts from "@/components/ui/RecentContacts";
@@ -11,6 +12,7 @@ import RequestMoney from "@/components/ui/request-money";
 import BuyCard from "@/components/ui/buy-card";
 
 const PaymentApp: React.FC = () => {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatData[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
@@ -61,6 +63,10 @@ const PaymentApp: React.FC = () => {
     }
   };
 
+  const navigateToScanner = () => {
+    router.push('/scanner');
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -91,9 +97,18 @@ const PaymentApp: React.FC = () => {
 
       {/* Main Content */}
       {!showSendMoney && !showRequestMoney && !showBuyCard && (
-        <div className="p-4 space-y-6 max-w-screen-lg mx-auto">
+        <div className="p-4 space-y-6 max-w-screen-lg mx-auto relative">
+          {/* Scanner Button in Top Right */}
+          <button 
+            onClick={navigateToScanner}
+            className="absolute top-2 right-2 p-2 bg-white border border-black rounded-full shadow-md hover:bg-gray-100"
+            aria-label="Open Scanner"
+          >
+            <ScanLine className="w-6 h-6 text-black" />
+          </button>
+
           {/* Header Section */}
-          <div className="text-center">
+          <div className="text-center pt-8">
             <h1 className="text-3xl font-bold">Welcome back</h1>
             <p className="text-gray-500 text-sm">Your latest transactions</p>
           </div>

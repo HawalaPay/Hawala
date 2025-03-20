@@ -1,10 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { BarChart, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Bar, ResponsiveContainer } from 'recharts';
 
+interface Transaction {
+  id: number;
+  name: string;
+  amount: number;
+  frequency: string;
+  nextDate: string;
+  category: string;
+}
+
+interface FormDataType {
+  name: string;
+  amount: string;
+  frequency: string;
+  nextDate: string;
+  category: string;
+}
+
 export default function RecurringTransactionsPage() {
-  const [transactions, setTransactions] = useState([
+  const [transactions, setTransactions] = useState<Transaction[]>([
     { id: 1, name: 'Netflix Subscription', amount: 199, frequency: 'Monthly', nextDate: '25/03/2025', category: 'Entertainment' },
     { id: 2, name: 'Gym Membership', amount: 1200, frequency: 'Monthly', nextDate: '01/04/2025', category: 'Health' },
     { id: 3, name: 'Electricity Bill', amount: 2800, frequency: 'Monthly', nextDate: '10/04/2025', category: 'Utilities' },
@@ -12,7 +29,7 @@ export default function RecurringTransactionsPage() {
     { id: 5, name: 'Internet Bill', amount: 999, frequency: 'Monthly', nextDate: '15/04/2025', category: 'Utilities' },
   ]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
     name: '',
     amount: '',
     frequency: 'Monthly',
@@ -36,17 +53,20 @@ export default function RecurringTransactionsPage() {
     { category: 'Investments', amount: 5000 },
   ];
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newTransaction = {
+    const newTransaction: Transaction = {
       id: transactions.length + 1,
-      ...formData,
-      amount: parseFloat(formData.amount)
+      name: formData.name,
+      amount: parseFloat(formData.amount),
+      frequency: formData.frequency,
+      nextDate: formData.nextDate,
+      category: formData.category
     };
     setTransactions([...transactions, newTransaction]);
     setFormData({
