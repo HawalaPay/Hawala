@@ -162,7 +162,7 @@ async function makePhoneCall(request: SupportRequest, analysis: GroqAnalysisResp
       phone_number: phoneWithCountryCode,
       task: `You're a bank support representative from Hawala Bank. Start Talking in Hindi Only. And Keep The Introduction Short and Try to Solve the users query properly. The customer ${request.name} has submitted a support request about: ${request.subject}. Their issue is: ${request.description}. Based on our analysis, the recommended solution is: ${analysis.solution}. Call them to follow up and provide this solution. Speak to them in ${analysis.language}. Make it Natural.`,
       voice: "June",
-      wait_for_greeting: false,
+      wait_for_greeting: true,
       record: true,
       amd: false,
       answered_by_enabled: false,
