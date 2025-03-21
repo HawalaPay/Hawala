@@ -18,6 +18,7 @@ export interface ScannerProps {
   onFaceRecognized: (contactId: number) => void;
   referenceImages: { id: number; src: string }[];
   isActive: boolean;
+  cameraConstraints?: MediaTrackConstraints;
 }
 
 // Custom image loading function

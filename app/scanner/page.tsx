@@ -15,7 +15,6 @@ const ScannerPage: React.FC = () => {
     { id: 1, src: "/people/Durva.jpeg" },
     { id: 2, src: "/people/Aviraj.jpg" },
     { id: 3, src: "/people/Mane.jpg" },
-    
   ];
 
   // Contact data
@@ -69,6 +68,13 @@ const ScannerPage: React.FC = () => {
     setScannerActive(false);
   };
 
+  // Camera constraints specifically for mobile back camera
+  const cameraConstraints: MediaTrackConstraints = {
+    facingMode: { exact: "environment" }, // Use the back camera
+    width: { ideal: 1920 },
+    height: { ideal: 1080 },
+  };
+
   const { 
     videoRef, 
     canvasRef, 
@@ -82,6 +88,7 @@ const ScannerPage: React.FC = () => {
     onFaceRecognized: handleFaceRecognized,
     referenceImages,
     isActive: scannerActive,
+    cameraConstraints, // Pass corrected camera constraints
   });
 
   const closeSendMoney = () => {
@@ -132,7 +139,7 @@ const ScannerPage: React.FC = () => {
               <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-30">
                 <div className="flex flex-col items-center">
                   <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-800 rounded-full animate-spin mb-4"></div>
-                  <p className="text-gray-800">Initializing camera...</p>
+                  <p className="text-gray-800">Initializing back camera...</p>
                 </div>
               </div>
             )}
