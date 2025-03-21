@@ -32,24 +32,24 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose, initialContact = null })
 
   // Contact data - this could be fetched from an API in a real app
   const contacts: Contact[] = [
-    { 
-      id: 1, 
-      name: "Durva Dongre", 
-      image: "/people/Durva.jpeg", // Use local path instead of GitHub URL
-      lastAmount: "2,500", 
-      address: "0x6da09B40135aCa55a967CEA5BD08D4FE6D2bD608" 
+    {
+      id: 1,
+      name: "Durva Dongre",
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-5.png?raw=true",
+      lastAmount: "2,500",
+      address: "0x6da09B40135aCa55a967CEA5BD08D4FE6D2bD608",
     },
     { 
       id: 2, 
       name: "Aviraj Patil", 
-      image: "/people/avatar-1.png", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-1.png?raw=true", 
       lastAmount: "1,800", 
       address: "0x2Cd79fa52973Ac5651314d9868bcdB779042FE87" 
     },
     { 
       id: 3, 
       name: "Dhanyakumar Mane", 
-      image: "/people/avatar-2.png", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-2.png?raw=true", 
       lastAmount: "3,200", 
       address: "0x951FB9620A09E1284Ec6Bf08296C977FDf0415B5" 
     },

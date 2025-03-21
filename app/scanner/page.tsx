@@ -13,8 +13,8 @@ const ScannerPage: React.FC = () => {
   // Reference images for face recognition
   const referenceImages = [
     { id: 1, src: "/people/Durva.jpeg" },
-    { id: 2, src: "/people/Durva.jpeg" },
-    { id: 3, src: "/people/Durva.jpeg" },
+    { id: 2, src: "/people/Aviraj.jpg" },
+    { id: 3, src: "/people/Mane.jpg" },
     
   ];
 
