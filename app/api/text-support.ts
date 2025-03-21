@@ -166,7 +166,7 @@ async function makePhoneCall(request: SupportRequest, analysis: GroqAnalysisResp
       record: true,
       amd: false,
       answered_by_enabled: false,
-      noise_cancellation: false,
+      noise_cancellation: true,
       interruption_threshold: 100,
       block_interruptions: false,
       max_duration: 12,
