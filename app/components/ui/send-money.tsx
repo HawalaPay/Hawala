@@ -13,11 +13,13 @@ interface Contact {
 
 interface SendMoneyProps {
   onClose: () => void;
+  initialContact?: Contact | null; // Add initialContact prop to accept contact from Scanner
 }
 
-const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
-  const [step, setStep] = useState(1);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+const SendMoney: React.FC<SendMoneyProps> = ({ onClose, initialContact = null }) => {
+  // Start at step 2 (amount input) if initial contact is provided
+  const [step, setStep] = useState(initialContact ? 2 : 1);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(initialContact);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,36 +30,53 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
 
   const quickAmounts = [500, 1000, 2000, 5000];
 
+  // Contact data - this could be fetched from an API in a real app
   const contacts: Contact[] = [
     { 
       id: 1, 
       name: "Durva Dongre", 
-      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-5.png?raw=true", 
+      image: "/people/Durva.jpeg", // Use local path instead of GitHub URL
       lastAmount: "2,500", 
       address: "0x6da09B40135aCa55a967CEA5BD08D4FE6D2bD608" 
     },
     { 
       id: 2, 
       name: "Aviraj Patil", 
-      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-1.png?raw=true", 
+      image: "/people/avatar-1.png", 
       lastAmount: "1,800", 
       address: "0x2Cd79fa52973Ac5651314d9868bcdB779042FE87" 
     },
     { 
       id: 3, 
       name: "Dhanyakumar Mane", 
-      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-2.png?raw=true", 
+      image: "/people/avatar-2.png", 
       lastAmount: "3,200", 
       address: "0x951FB9620A09E1284Ec6Bf08296C977FDf0415B5" 
     },
   ];
 
+  // Check if wallet is connected on component mount
   useEffect(() => {
     checkWalletConnection();
   }, []);
 
+  // If initial contact is provided but not in contacts list, add it
+  useEffect(() => {
+    if (initialContact && initialContact.id === 0) {
+      // This is an unknown contact from QR code scanning
+      // Try to match by address
+      const existingContact = contacts.find(c => 
+        c.address.toLowerCase() === initialContact.address.toLowerCase()
+      );
+      
+      if (existingContact) {
+        setSelectedContact(existingContact);
+      }
+    }
+  }, [initialContact]);
+
   const checkWalletConnection = async () => {
-    if (window.ethereum) {
+    if (typeof window !== 'undefined' && window.ethereum) {
       try {
         const accounts = await window.ethereum.request({ 
           method: "eth_accounts" 
@@ -72,7 +91,7 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
   };
 
   const connectWallet = async () => {
-    if (!window.ethereum) {
+    if (typeof window === 'undefined' || !window.ethereum) {
       alert("Please install MetaMask!");
       return;
     }
@@ -148,11 +167,15 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
               className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-50 cursor-pointer border border-gray-100 transition-all duration-200"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                   <img 
                     src={contact.image} 
                     alt={contact.name} 
-                    className="w-full h-full rounded-full"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "/img/avatar-default.png"; // Fallback image
+                    }}
                   />
                 </div>
                 <div>
@@ -190,11 +213,15 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
         )}
         
         <div className="text-center space-y-3">
-          <div className="w-20 h-20 rounded-full bg-gray-100 mx-auto flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-gray-100 mx-auto flex items-center justify-center overflow-hidden">
             <img 
               src={selectedContact.image} 
               alt={selectedContact.name} 
-              className="w-full h-full rounded-full"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/img/avatar-default.png"; // Fallback image
+              }}
             />
           </div>
           <h3 className="font-medium text-lg">{selectedContact.name}</h3>
@@ -257,6 +284,14 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
             <span className="font-medium">{note}</span>
           </div>
         )}
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">Recipient</span>
+          <span className="font-medium">{selectedContact?.name}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-gray-600">Address</span>
+          <span className="font-medium text-xs break-all">{selectedContact?.address.slice(0, 8)}...{selectedContact?.address.slice(-8)}</span>
+        </div>
       </div>
 
       <button
@@ -277,7 +312,7 @@ const SendMoney: React.FC<SendMoneyProps> = ({ onClose }) => {
   );
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/20 p-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/20 p-4 z-50">
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl">
         <div className="p-4 border-b relative flex justify-between items-center">
           <div className="w-8">

@@ -1,184 +1,199 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
+import { useScanner, Contact } from "@/api/scanner";
+import SendMoney from "@/components/ui/send-money";
+import { QrCode, Scan, X } from "lucide-react";
 
-export default function ScannerPage() {
-  const router = useRouter();
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [scanMode, setScanMode] = useState<'qr' | 'face'>('qr');
-  const [message, setMessage] = useState('Initializing camera...');
-  const [scanning, setScanning] = useState(false);
+const ScannerPage: React.FC = () => {
+  const [showSendMoney, setShowSendMoney] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [scannerActive, setScannerActive] = useState(true);
 
-  // Initialize camera
-  useEffect(() => {
-    async function setupCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          setCameraActive(true);
-          setMessage('Camera ready. Position QR code or face in the frame.');
-        }
-      } catch (error) {
-        setMessage('Camera access denied or not available');
-        console.error('Error accessing camera:', error);
-      }
-    }
-
-    setupCamera();
-
-    // Cleanup function to stop camera when component unmounts
-    return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
-      }
-    };
-  }, []);
-
-  // Function to capture frame and send to backend
-  const captureFrame = async () => {
-    if (!cameraActive || !videoRef.current || !canvasRef.current || scanning) return;
+  // Reference images for face recognition
+  const referenceImages = [
+    { id: 1, src: "/people/Durva.jpeg" },
+    { id: 2, src: "/people/Durva.jpeg" },
+    { id: 3, src: "/people/Durva.jpeg" },
     
-    setScanning(true);
-    
-    try {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext('2d');
-      
-      if (!context) return;
-      
-      // Set canvas dimensions to match video
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      // Draw current video frame to canvas
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Get image data as base64
-      const imageData = canvas.toDataURL('image/jpeg');
-      
-      // Send to backend API
-      const response = await fetch('/api/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: imageData,
-          type: scanMode
-        }),
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          setMessage(`${scanMode === 'qr' ? 'QR Code' : 'Face'} detected: ${result.data}`);
-          // You can add additional handling for successful scans here
-        } else {
-          setMessage(`No ${scanMode === 'qr' ? 'QR code' : 'face'} detected. Try again.`);
-        }
-      } else {
-        setMessage('Error processing scan. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error during scan:', error);
-      setMessage('Something went wrong. Please try again.');
-    } finally {
-      setScanning(false);
+  ];
+
+  // Contact data
+  const contacts: Contact[] = [
+    {
+      id: 1,
+      name: "Durva Dongre",
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-5.png?raw=true",
+      lastAmount: "2,500",
+      address: "0x6da09B40135aCa55a967CEA5BD08D4FE6D2bD608",
+    },
+    { 
+      id: 2, 
+      name: "Aviraj Patil", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-1.png?raw=true", 
+      lastAmount: "1,800", 
+      address: "0x2Cd79fa52973Ac5651314d9868bcdB779042FE87" 
+    },
+    { 
+      id: 3, 
+      name: "Dhanyakumar Mane", 
+      image: "https://github.com/omsandippatil/Hawala/blob/main/img/avatar-2.png?raw=true", 
+      lastAmount: "3,200", 
+      address: "0x951FB9620A09E1284Ec6Bf08296C977FDf0415B5" 
+    },
+  ];
+
+  // Handle face recognition
+  const handleFaceRecognized = (contactId: number) => {
+    const matchedContact = contacts.find((c) => c.id === contactId);
+    if (matchedContact) {
+      setSelectedContact(matchedContact);
+      setScannerActive(false);
+      setShowSendMoney(true);
     }
   };
 
-  // Continuous scanning every second
-  useEffect(() => {
-    if (cameraActive) {
-      const interval = setInterval(captureFrame, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [cameraActive, scanMode, scanning]);
-
-  // Toggle between QR and face scanning
-  const toggleScanMode = () => {
-    setScanMode(scanMode === 'qr' ? 'face' : 'qr');
-    setMessage(`Switched to ${scanMode === 'qr' ? 'face' : 'QR code'} scanning mode`);
+  // Handle QR code detection
+  const handleAddressFound = (address: string) => {
+    const matchedContact = contacts.find((c) => c.address === address);
+    setSelectedContact(
+      matchedContact || {
+        id: 0,
+        name: "Unknown",
+        image: "/img/avatar-default.png",
+        lastAmount: "",
+        address,
+      }
+    );
+    setShowSendMoney(true);
+    setScannerActive(false);
   };
 
-  // Close scanner and go back to home
-  const handleClose = () => {
-    router.push('/home');
+  const { 
+    videoRef, 
+    canvasRef, 
+    error, 
+    detectionMode, 
+    toggleDetectionMode,
+    isReady,
+    isFaceDetectionReady 
+  } = useScanner({
+    onAddressFound: handleAddressFound,
+    onFaceRecognized: handleFaceRecognized,
+    referenceImages,
+    isActive: scannerActive,
+  });
+
+  const closeSendMoney = () => {
+    setShowSendMoney(false);
+    setSelectedContact(null);
+    setTimeout(() => setScannerActive(true), 500);
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-black text-white">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-black border-b border-gray-800">
-        <button 
-          onClick={handleClose}
-          className="p-2 rounded-full hover:bg-gray-800 transition-colors"
-        >
-          <ArrowLeft size={24} />
-        </button>
-        <h1 className="text-lg font-medium">
-          {scanMode === 'qr' ? 'QR Code Scanner' : 'Face Scanner'}
-        </h1>
-        <button 
-          onClick={handleClose}
-          className="p-2 rounded-full hover:bg-gray-800 transition-colors"
-        >
-          <X size={24} />
-        </button>
-      </div>
-      
-      {/* Camera View */}
-      <div className="relative flex-1 flex items-center justify-center bg-black overflow-hidden">
-        {/* Scanner Overlay */}
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          <div className="h-full w-full flex items-center justify-center">
-            <div className="w-64 h-64 border-2 border-white opacity-70 rounded-lg"></div>
+    <div className="bg-white h-screen w-full flex flex-col relative">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg absolute top-4 left-4 right-4 z-50 shadow-md">
+          {error}
+        </div>
+      )}
+
+      {!showSendMoney && (
+        <>
+          {/* Header */}
+          <div className="p-4 text-center border-b border-gray-100">
+            <h1 className="text-lg font-medium text-gray-900">
+              {detectionMode === "qr" ? "Scan QR Code" : "Face Recognition"}
+            </h1>
           </div>
-        </div>
-        
-        {/* Video stream */}
-        <video 
-          ref={videoRef}
-          autoPlay 
-          playsInline 
-          muted 
-          className="h-full w-full object-cover"
-        />
-        
-        {/* Hidden canvas for processing */}
-        <canvas ref={canvasRef} className="hidden" />
-      </div>
-      
-      {/* Footer */}
-      <div className="p-4 bg-black border-t border-gray-800">
-        <p className="text-center mb-4 text-sm text-gray-300">{message}</p>
-        
-        <div className="flex justify-center space-x-4">
-          <button 
-            onClick={toggleScanMode}
-            className="px-6 py-2 bg-white text-black font-medium rounded-full hover:bg-gray-200 transition-colors"
-          >
-            {scanMode === 'qr' ? 'Switch to Face Scan' : 'Switch to QR Scan'}
-          </button>
           
-          <button 
-            onClick={captureFrame}
-            className="px-6 py-2 border border-white rounded-full font-medium hover:bg-gray-900 transition-colors"
-          >
-            Scan Now
-          </button>
+          {/* Scanner View */}
+          <div className="flex-1 relative overflow-hidden">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              muted 
+              playsInline 
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            
+            <canvas 
+              ref={canvasRef} 
+              className="absolute inset-0 w-full h-full z-10"
+            />
+            
+            {/* Scanning frame */}
+            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+              <div className="w-64 h-64 border-2 border-white rounded-lg opacity-70"></div>
+            </div>
+            
+            {/* Loading states */}
+            {!isReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-30">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-800 rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-800">Initializing camera...</p>
+                </div>
+              </div>
+            )}
+            
+            {isReady && !isFaceDetectionReady && detectionMode === "face" && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-30">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-800 rounded-full animate-spin mb-4"></div>
+                  <p className="text-gray-800">Loading face recognition...</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Mode indicator */}
+            <div className="absolute top-4 left-0 right-0 flex justify-center z-20 pointer-events-none">
+              <div className="px-4 py-2 bg-black bg-opacity-50 rounded-full text-white text-sm">
+                {detectionMode === "qr" 
+                  ? "Position QR code in the frame" 
+                  : "Position face in the frame"}
+              </div>
+            </div>
+          </div>
+          
+          {/* Control Bar */}
+          <div className="p-6 border-t border-gray-100 flex justify-center items-center">
+            <button 
+              onClick={toggleDetectionMode}
+              className="flex items-center justify-center bg-black text-white rounded-full w-14 h-14 shadow-md"
+              aria-label={`Switch to ${detectionMode === "qr" ? "face recognition" : "QR code scanning"}`}
+            >
+              {detectionMode === "qr" 
+                ? <Scan size={24} /> 
+                : <QrCode size={24} />}
+            </button>
+            
+            <div className="absolute bottom-20 left-0 right-0 flex justify-center">
+              <div className="text-xs text-gray-500">
+                Tap to switch to {detectionMode === "qr" ? "face recognition" : "QR code"}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showSendMoney && selectedContact && (
+        <div className="absolute inset-0 bg-white z-40">
+          <div className="p-4 flex justify-between items-center border-b border-gray-100">
+            <h2 className="text-lg font-medium text-gray-900">Send Money</h2>
+            <button 
+              onClick={closeSendMoney}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <SendMoney onClose={closeSendMoney} initialContact={selectedContact} />
         </div>
-      </div>
+      )}
     </div>
   );
-}
+};
+
+export default ScannerPage;
