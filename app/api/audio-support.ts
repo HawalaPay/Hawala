@@ -296,9 +296,10 @@ async function saveToGoogleSheets(request: SupportRequest, analysis: GroqAnalysi
   try {
     const customerId = ticketId;
 
-    // Fix: Use dire URL with all parameters
+    // Fix: Use direct URL with all parameters
     const baseUrl = 'https://script.google.com/macros/s/AKfycbwEtIaGxm-3Ff-iZM4_Fuys8x4BKYf9kadN1B1oadMenS9ATzdHCOcgqpuwGhZa4OQJQA/exec';
     
+
     // URL encode all parameters
     const params = new URLSearchParams();
     params.append('action', 'put');
